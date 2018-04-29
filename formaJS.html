@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        input {
+            display: block;
+            margin: 5px;
+        }
+
+        td {
+            padding: 5px;
+            border: dotted gray 1px;
+        }
+
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        table {
+            margin-left: 20px;
+        }
+
+        #add {
+            visibility: hidden;
+            height: 99px;
+        }
+    </style>
+</head>
+<body>
+
+<input type="button" value="Add new" id="add">
+<form action="#" id="forma">
+    <input type="text" name="ime" id="ime" placeholder="Ime">
+    <input type="text" name="email" id="email" placeholder="Email">
+    <input type="text" name="godine" id="godine" placeholder="Godine">
+    <input type="hidden" name="hm" id="id" value="">
+    <input type="submit" name="posalji" id="posalji" value="Add">
+</form>
+<div id="ispisTabele"></div>
+
+<script>
+    ispisTabele();
+
+    document.getElementById("forma").addEventListener("submit", function (event) {
+        event.preventDefault();
+        var ime = document.getElementById("ime").value,
+            email = document.getElementById("email").value,
+            godine = document.getElementById("godine").value;
+        if (ime === '' || email === '' || godine === '') {
+            alert("Morate uneti sva polja!");
+            return;
+        } else if (ime.length < 2 || email.length < 2 || godine.length < 2) {
+            alert("Morate uneti više od 2 karaktera!");
+            return;
+        }
+        var novaOsoba = {
+                ime: ime,
+                email: email,
+                godine: godine
+            },
+            osobe = getOsobe(),
+            daLiJeEdit = document.getElementById("id").value !== "";
+        if (daLiJeEdit) {
+            osobe[document.getElementById("id").value] = novaOsoba;
+        } else {
+            osobe.push(novaOsoba);
+        }
+        localStorage.setItem('osobe', JSON.stringify(osobe));
+        resetForme();
+        ispisTabele();
+    });
+
+    document.getElementById("ispisTabele").addEventListener("click", function (event) {
+        if (event.target !== event.currentTarget) {
+            var id = event.target.parentElement.id;
+            console.log("id", id, "class", event.target.classList[0]);
+            var osobe = getOsobe();
+            if (event.target.classList[0] == "edit") {
+                editTask(id, osobe);
+            } else if (event.target.classList[0] == "delete") {
+                deleteTask(id, osobe);
+            }
+        }
+    });
+
+    document.getElementById("add").addEventListener("click", function () {
+        resetForme();
+    });
+
+    function resetForme() {
+        document.getElementById("forma").reset();
+        document.getElementById("id").value = "";
+        document.getElementById("posalji").setAttribute("value", "Add");
+        document.getElementById("add").style.visibility = "hidden";
+    }
+
+    function getOsobe() {
+        var osobe = JSON.parse(localStorage.getItem('osobe'));
+        if (osobe == null) osobe = [];
+        return osobe;
+    }
+
+    function ispisTabele() {
+        var tabela = document.createElement("table"),
+            osobe = getOsobe();
+        tabela.setAttribute("id", "tabela");
+        for (var i = 0; i < osobe.length; i++) {
+            var osoba = osobe[i];
+            if (osoba == null) {
+                continue;
+            }
+            var noviRed = document.createElement("tr");
+            noviRed.setAttribute("id", "red" + i);
+            for (var j in osoba) {
+                var novoPolje = document.createElement("td");
+                novoPolje.textContent = osoba[j];
+                noviRed.appendChild(novoPolje);
+            }
+            var editBtn = document.createElement("td"),
+                deleteBtn = document.createElement("td");
+            editBtn.classList = "edit";
+            editBtn.textContent = "Edit";
+            deleteBtn.classList = "delete";
+            deleteBtn.textContent = "Delete";
+            noviRed.appendChild(editBtn);
+            noviRed.appendChild(deleteBtn);
+            tabela.appendChild(noviRed);
+        }
+        document.getElementById("ispisTabele").innerHTML = tabela.outerHTML;
+    }
+
+    function deleteTask(id, osobe) {
+        var idBroj = id.split("red")[1];
+        delete osobe[idBroj];
+        localStorage.setItem('osobe', JSON.stringify(osobe));
+        ispisTabele();
+    }
+
+    function editTask(id, osobe) {
+        var idBroj = id.split("red")[1];
+        document.getElementById("ime").value = osobe[idBroj].ime;
+        document.getElementById("email").value = osobe[idBroj].email;
+        document.getElementById("godine").value = osobe[idBroj].godine;
+        document.getElementById("id").value = idBroj;
+        document.getElementById("posalji").value = "Update";
+        document.getElementById("add").style.visibility = "visible";
+    }
+</script>
+</body>
+</html>
